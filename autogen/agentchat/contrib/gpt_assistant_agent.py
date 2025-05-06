@@ -346,7 +346,7 @@ class GPTAssistantAgent(ConversableAgent):
             run = self._openai_client.beta.threads.runs.retrieve(run_id, thread_id=thread_id)
             in_progress = run.status in ("in_progress", "queued")
             if in_progress:
-                time.sleep(self.llm_config.get("check_every_ms", 1000) / 1000)
+                time.sleep((self.llm_config.get("check_every_ms") or 1000) / 1000)
         return run
 
     def _format_assistant_message(self, message_content):

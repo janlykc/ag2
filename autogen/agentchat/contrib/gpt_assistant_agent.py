@@ -209,7 +209,7 @@ class GPTAssistantAgent(ConversableAgent):
         assistant_thread = self._openai_threads[sender]
         # Process each unread message
         for message in pending_messages:
-            if message["content"].strip() == "":
+            if message["content"] is None or message["content"].strip() == "":
                 continue
             # Convert message roles to 'user' or 'assistant', by calling _map_role_for_api, to comply with OpenAI API spec
             api_role = self._map_role_for_api(message["role"])

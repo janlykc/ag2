@@ -167,4 +167,4 @@ class FalkorGraphQueryEngine:
         if self.ontology_table_name not in self.falkordb.list_graphs():
             raise ValueError(f"Knowledge graph {self.name} has not been created.")
         graph = self.__get_ontology_storage_graph()
-        return Ontology.from_graph(graph)
+        return Ontology.from_schema_graph(graph)

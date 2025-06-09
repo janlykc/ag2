@@ -13,7 +13,8 @@ from ....doc_utils import export_module
 from ....llm_config import LLMConfig
 from ...conversable_agent import ConversableAgent
 from .agent_builder import AgentBuilder
-from .tool_retriever import ToolBuilder, format_ag2_tool, get_full_tool_description
+from .tool_retriever import (ToolBuilder, format_ag2_tool,
+                             get_full_tool_description)
 
 
 @export_module("autogen.agentchat.contrib.captainagent")
@@ -207,7 +208,7 @@ Note that the previous experts will forget everything after you obtain the respo
             agent_config_save_path=agent_config_save_path,
             is_termination_msg=lambda x: x.get("content", "") and "terminate" in x.get("content", "").lower(),
             code_execution_config=code_execution_config,
-            human_input_mode="NEVER",
+            human_input_mode="NEVER"
         )
 
         self.register_nested_chats(
@@ -472,6 +473,10 @@ Collect information from the general task, follow the suggestions from manager t
                 json.dump(self.build_history, f)
 
         self.build_times += 1
+
+        # allow customization of the experts
+        agent_list = self.review_experts(agent_list)
+
         # start nested chat
         nested_group_chat = GroupChat(
             agents=agent_list,
@@ -510,3 +515,9 @@ Collect information from the general task, follow the suggestions from manager t
         )
 
         return f"# Response from seek_agent_help: \n{summarized_history}"
+
+    def review_experts(self, agent_list: list[ConversableAgent]) -> list[ConversableAgent]:
+        """Review the experts and return the modified agent list.
+        This function is called after the group of experts is built.
+        """
+        return agent_list

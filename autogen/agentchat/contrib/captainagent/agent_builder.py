@@ -15,7 +15,8 @@ from typing import Any, Optional, Union
 
 from termcolor import colored
 
-from .... import AssistantAgent, ConversableAgent, OpenAIWrapper, UserProxyAgent
+from .... import (AssistantAgent, ConversableAgent, OpenAIWrapper,
+                  UserProxyAgent)
 from ....code_utils import CODE_BLOCK_PATTERN
 from ....doc_utils import export_module
 from ....llm_config import LLMConfig
@@ -221,11 +222,13 @@ Match roles in the role set to each expert in expert set.
             builder_filter_dict.update({"tags": builder_model_tags})
 
         llm_config = (
-            LLMConfig.from_json(env=config_file_or_env, file_location=config_file_location).where(**builder_filter_dict)
+            LLMConfig.from_json(env=config_file_or_env, file_location=config_file_location,
+                                json_str=json.dumps(llm_config)).where(**builder_filter_dict)
             if llm_config is None
             else llm_config
         )
-        builder_config_list = llm_config.config_list
+
+        builder_config_list = llm_config['config_list'] if isinstance(llm_config, dict) else llm_config.config_list
 
         if len(builder_config_list) == 0:
             raise RuntimeError(
@@ -296,13 +299,16 @@ Match roles in the role set to each expert in expert set.
             filter_dict.update({"model": model_name_or_hf_repo})
         if len(model_tags) > 0:
             filter_dict.update({"tags": model_tags})
-        config_list = (
-            LLMConfig.from_json(env=self.config_file_or_env, file_location=self.config_file_location)
-            .where(**filter_dict)
-            .config_list
-            if self.llm_config is None
-            else self.llm_config.config_list
-        )
+
+        config_list = []
+        if self.llm_config is None:
+            config_list = LLMConfig.from_json(env=self.config_file_or_env,
+                                              file_location=self.config_file_location).where(**filter_dict).config_list
+        elif isinstance(self.llm_config, dict):
+            config_list = self.llm_config.get("config_list", [])
+        else:
+            config_list = self.llm_config.config_list
+
         if len(config_list) == 0:
             raise RuntimeError(
                 f"Fail to initialize agent {agent_name}: {model_name_or_hf_repo}{model_tags} does not exist in {self.config_file_or_env}.\n"

@@ -139,6 +139,12 @@ executor = DockerCommandLineCodeExecutor(
     image="python:3.12-slim",  # Execute code using the given docker image name.
     timeout=10,  # Timeout for each code execution in seconds.
     work_dir=temp_dir.name,  # Use the temporary directory to store the code files.
+    # (Optional): forward any extra kwargs directly to docker.containers.create().
+    container_create_kwargs={
+        # Example: pass an env-var and request GPU 0
+        "environment": {"TOKEN": "<your-token>"},
+        # "device_requests": [docker.types.DeviceRequest(device_ids=["0"], capabilities=[["gpu"]])],
+    },
 )
 
 # Create an agent with code executor configuration that uses docker.
@@ -345,7 +351,7 @@ print("The 'stock_gains.png' file has been successfully saved")
 '''
 This script will download the historical data for TSLA and META from the start of the year to the specified date and calculates the YTD gains. It then generates the plot showing these gains and saves it to 'stock_gains.png'.
 
-Please save the script to a file named 'stock_gains.py' and run it using Python. Remember to have the correct start and end dates for the YTD value when running the script. If your Python version is below 3.9, you should update it to execute this code perfectly.
+Please save the script to a file named 'stock_gains.py' and run it using Python. Remember to have the correct start and end dates for the YTD value when running the script. If your Python version is below 3.10, you should update it to execute this code perfectly.
 
 --------------------------------------------------------------------------------
 

@@ -7,6 +7,8 @@ from autogen.oai.gemini_types import CaseInSensitiveEnum as LocalCaseInSensitive
 from autogen.oai.gemini_types import CommonBaseModel as LocalCommonBaseModel
 from autogen.oai.gemini_types import FunctionCallingConfig as LocalFunctionCallingConfig
 from autogen.oai.gemini_types import FunctionCallingConfigMode as LocalFunctionCallingConfigMode
+from autogen.oai.gemini_types import LatLng as LocalLatLng
+from autogen.oai.gemini_types import RetrievalConfig as LocalRetrievalConfig
 from autogen.oai.gemini_types import ToolConfig as LocalToolConfig
 
 with optional_import_block():
@@ -15,6 +17,8 @@ with optional_import_block():
     from google.genai.types import (
         FunctionCallingConfig,
         FunctionCallingConfigMode,
+        LatLng,
+        RetrievalConfig,
         ToolConfig,
     )
 
@@ -25,8 +29,14 @@ class TestGeminiTypes:
         for v in ["MODE_UNSPECIFIED", "AUTO", "ANY", "NONE"]:
             assert getattr(LocalFunctionCallingConfigMode, v) == getattr(FunctionCallingConfigMode, v)
 
+    def test_LatLng(self) -> None:  # noqa: N802
+        assert LocalLatLng.model_json_schema() == LatLng.model_json_schema()
+
     def test_FunctionCallingConfig(self) -> None:  # noqa: N802
         assert LocalFunctionCallingConfig.model_json_schema() == FunctionCallingConfig.model_json_schema()
+
+    def test_RetrievalConfig(self) -> None:  # noqa: N802
+        assert LocalRetrievalConfig.model_json_schema() == RetrievalConfig.model_json_schema()
 
     def test_ToolConfig(self) -> None:  # noqa: N802
         assert LocalToolConfig.model_json_schema() == ToolConfig.model_json_schema()
@@ -51,7 +61,7 @@ class TestGeminiTypes:
         assert LocalTestEnum("TEST") == TestEnum("test")  # type: ignore[comparison-overlap]
         assert actual.value == "TEST"
         assert actual == "TEST"
-        assert actual != "test"
+        assert actual != "test"  # type: ignore[comparison-overlap]
 
         actual = LocalTestEnum("TEST_2")
 
@@ -60,7 +70,7 @@ class TestGeminiTypes:
         assert LocalTestEnum("test_2") == TestEnum("TEST_2")  # type: ignore[comparison-overlap]
         assert actual.value == "TEST_2"
         assert actual == "TEST_2"
-        assert actual != "test_2"
+        assert actual != "test_2"  # type: ignore[comparison-overlap]
 
     def test_CommonBaseModel(self) -> None:  # noqa: N802
         assert LocalCommonBaseModel.model_config == CommonBaseModel.model_config

@@ -197,3 +197,10 @@ client_secret*.json
 *token*.json
 *credentials.json
 notebook/*_server.py
+
+
+notebook/mcp/wikipedia_articles
+notebook/mcp/arxiv_papers
+
+
+*CLAUDE.md:

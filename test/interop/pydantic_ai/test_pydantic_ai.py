@@ -13,8 +13,7 @@ from autogen import AssistantAgent, UserProxyAgent
 from autogen.import_utils import optional_import_block, run_for_optional_imports
 from autogen.interop import Interoperable
 from autogen.interop.pydantic_ai import PydanticAIInteroperability
-
-from ...conftest import Credentials
+from test.credentials import Credentials
 
 with optional_import_block():
     from pydantic_ai import RunContext
@@ -121,12 +120,12 @@ class TestPydanticAIInteroperabilityDependencyInjection:
         for i in range(3):
             with pytest.raises(ValueError, match="Retry"):
                 g(city="Zagreb", date="2021-01-01")
-                assert pydantic_ai_tool.current_retry == i + 1
+                assert ctx.retries[pydantic_ai_tool.name] == i + 1
                 assert ctx.retry == i
 
         with pytest.raises(ValueError, match="f failed after 3 retries"):
             g(city="Zagreb", date="2021-01-01")
-            assert pydantic_ai_tool.current_retry == 3
+            assert ctx.retries[pydantic_ai_tool.name] == 3
 
 
 @pytest.mark.interop

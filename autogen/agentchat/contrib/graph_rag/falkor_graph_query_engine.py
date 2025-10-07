@@ -55,7 +55,7 @@ class FalkorGraphQueryEngine:
         self.username = username
         self.password = password
         self.model = model or OpenAiGenerativeModel("gpt-4o")
-        self.model_config = KnowledgeGraphModelConfig.with_model(model)
+        self.model_config = KnowledgeGraphModelConfig.with_model(self.model)
         self.ontology = ontology
         self.knowledge_graph: KnowledgeGraph | None = None  # type: ignore[no-any-unimported]
         self.falkordb = FalkorDB(host=self.host, port=self.port, username=self.username, password=self.password)
@@ -138,9 +138,6 @@ class FalkorGraphQueryEngine:
             raise ValueError("Knowledge graph has not been selected or created.")
 
         response = self._chat_session.send_message(question)
-
-        # History will be considered when querying by setting the last_answer
-        self._chat_session.last_answer = response["response"]
 
         return GraphStoreQueryResult(answer=response["response"], results=[])
 

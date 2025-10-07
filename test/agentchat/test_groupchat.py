@@ -24,8 +24,8 @@ from autogen import Agent, AssistantAgent, GroupChat, GroupChatManager
 from autogen.agentchat.contrib.capabilities import transform_messages, transforms
 from autogen.exception_utils import AgentNameConflictError, UndefinedNextAgentError
 from autogen.import_utils import run_for_optional_imports
-
-from ..conftest import Credentials, suppress_json_decoder_error
+from test.credentials import Credentials
+from test.utils import suppress_json_decoder_error
 
 
 def test_groupchat_init():
@@ -1565,7 +1565,6 @@ def test_speaker_selection_auto_process_result():
     groupchat = autogen.GroupChat(agents=agent_list, messages=[], max_round=3)
 
     chat_result = autogen.ChatResult(
-        chat_id=None,
         chat_history=[
             {
                 "content": "Let's get this meeting started. First the Product_Manager will create 3 new product ideas.",

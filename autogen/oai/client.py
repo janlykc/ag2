@@ -656,7 +656,7 @@ class OpenAIClient:
                 for msg in params["messages"]:
                     if msg["role"] == "user" and msg["content"].startswith("System message: "):
                         msg["role"] = "system"
-                        msg["content"] = msg["content"][len("System message: ") :]
+                        msg["content"] = msg["content"][len("System message: "):]
 
         return response
 
@@ -697,7 +697,15 @@ class OpenAIClient:
 
     def cost(self, response: ChatCompletion | Completion) -> float:
         """Calculate the cost of the response."""
-        model = response.model
+        if response is None:
+            logger.warning("Cost requested for empty OpenAI response; returning 0.")
+            return 0.0
+
+        model = getattr(response, "model", None)
+        if model is None:
+            logger.warning("Cost requested for response without model; returning 0.")
+            return 0.0
+
         if model not in OAI_PRICE1K:
             # log warning that the model is not found
             logger.warning(
@@ -1083,7 +1091,7 @@ class OpenAIWrapper:
         ordered_clients_indices = list(range(len(self._clients)))
         if self.routing_method == "round_robin" and len(self._clients) > 0:
             ordered_clients_indices = (
-                ordered_clients_indices[self._round_robin_index :] + ordered_clients_indices[: self._round_robin_index]
+                ordered_clients_indices[self._round_robin_index:] + ordered_clients_indices[: self._round_robin_index]
             )
             self._round_robin_index = (self._round_robin_index + 1) % len(self._clients)
 
@@ -1236,11 +1244,21 @@ class OpenAIWrapper:
                 if i == last:
                     raise
             else:
+                if response is None:
+                    logger.warning(
+                        "Model client %s returned no response (config index %s, model=%s). Skipping.",
+                        client.__class__.__name__,
+                        i,
+                        params.get("model"),
+                    )
+                    continue
+
                 # add cost calculation before caching no matter filter is passed or not
                 if price is not None:
                     response.cost = self._cost_with_customized_price(response, price)
                 else:
                     response.cost = client.cost(response)
+                response.message_retrieval_function = client.message_retrieval
                 actual_usage = client.get_usage(response)
                 total_usage = actual_usage.copy() if actual_usage is not None else total_usage
                 self._update_usage(actual_usage=actual_usage, total_usage=total_usage)
@@ -1260,11 +1278,10 @@ class OpenAIWrapper:
                         request=params,
                         response=response,
                         is_cached=0,
-                        cost=response.cost,
+                        cost=response.cost if hasattr(response, "cost") else 0,
                         start_time=request_ts,
                     )
 
-                response.message_retrieval_function = client.message_retrieval
                 # check the filter
                 pass_filter = filter_func is None or filter_func(context=context, response=response)
                 if pass_filter or i == last:

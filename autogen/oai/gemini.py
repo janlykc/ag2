@@ -389,9 +389,12 @@ class GeminiClient:
         error_finish_reason = None
 
         if isinstance(response, GenerateContentResponse):
-            if len(response.candidates) != 1:
+            if response.candidates is None or len(response.candidates) != 1:
+                # Handle blocked/empty responses (e.g., safety filters, API errors)
+                num_candidates = len(response.candidates) if response.candidates is not None else 0
                 raise ValueError(
-                    f"Unexpected number of candidates in the response. Expected 1, got {len(response.candidates)}"
+                    f"Unexpected number of candidates in the response. Expected 1, got {num_candidates}. "
+                    f"Response may have been blocked by safety filters or API error."
                 )
 
             # Look at https://cloud.google.com/vertex-ai/generative-ai/docs/reference/python/latest/vertexai.generative_models.FinishReason
@@ -409,9 +412,12 @@ class GeminiClient:
                 parts = response.candidates[0].content.parts
         elif isinstance(response, VertexAIGenerationResponse):  # or hasattr(response, "candidates"):
             # google.generativeai also raises an error len(candidates) != 1:
-            if len(response.candidates) != 1:
+            if response.candidates is None or len(response.candidates) != 1:
+                # Handle blocked/empty responses (e.g., safety filters, API errors)
+                num_candidates = len(response.candidates) if response.candidates is not None else 0
                 raise ValueError(
-                    f"Unexpected number of candidates in the response. Expected 1, got {len(response.candidates)}"
+                    f"Unexpected number of candidates in the response. Expected 1, got {num_candidates}. "
+                    f"Response may have been blocked by safety filters or API error."
                 )
             parts = response.candidates[0].content.parts
         else:

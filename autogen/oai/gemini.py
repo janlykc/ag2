@@ -152,6 +152,8 @@ class GeminiClient:
     """Client for Google's Gemini API."""
 
     RESPONSE_USAGE_KEYS: list[str] = ["prompt_tokens", "completion_tokens", "total_tokens", "cost", "model"]
+    MALFORMED_FUNCTION_CALL_RETRIES: int = 1
+    MALFORMED_FUNCTION_CALL_RETRY_DELAY: float = 0.25
 
     # Mapping, where Key is a term used by Autogen, and Value is a term used by Gemini
     PARAMS_MAPPING = {
@@ -338,19 +340,40 @@ class GeminiClient:
 
         # A. create and call the chat model.
         gemini_messages = self._oai_messages_to_gemini_messages(messages)
-        if self.use_vertexai:
-            model = GenerativeModel(
-                model_name,
-                generation_config=GenerationConfig(**generation_config),
-                safety_settings=safety_settings,
-                system_instruction=system_instruction,
-                tool_config=tool_config,
-                tools=tools,
-            )
 
-            chat = model.start_chat(history=gemini_messages[:-1], response_validation=response_validation)
-            response = chat.send_message(gemini_messages[-1].parts, stream=stream, safety_settings=safety_settings)
-        else:
+        # Extract retry parameters
+        malformed_retry_attempts = params.get(
+            "malformed_function_call_retries", self.MALFORMED_FUNCTION_CALL_RETRIES
+        )
+        try:
+            malformed_retry_attempts = int(malformed_retry_attempts)
+        except (TypeError, ValueError):
+            malformed_retry_attempts = self.MALFORMED_FUNCTION_CALL_RETRIES
+        malformed_retry_attempts = max(0, malformed_retry_attempts)
+
+        malformed_retry_delay = params.get(
+            "malformed_function_call_retry_delay", self.MALFORMED_FUNCTION_CALL_RETRY_DELAY
+        )
+        try:
+            malformed_retry_delay = float(malformed_retry_delay)
+        except (TypeError, ValueError):
+            malformed_retry_delay = self.MALFORMED_FUNCTION_CALL_RETRY_DELAY
+        malformed_retry_delay = max(0.0, malformed_retry_delay)
+
+        def _send_request():
+            if self.use_vertexai:
+                model = GenerativeModel(
+                    model_name,
+                    generation_config=GenerationConfig(**generation_config),
+                    safety_settings=safety_settings,
+                    system_instruction=system_instruction,
+                    tool_config=tool_config,
+                    tools=tools,
+                )
+                chat = model.start_chat(history=gemini_messages[:-1], response_validation=response_validation)
+                return chat.send_message(
+                    gemini_messages[-1].parts, stream=stream, safety_settings=safety_settings
+                )
             client = genai.Client(api_key=self.api_key, http_options=http_options)
             generate_content_config = GenerateContentConfig(
                 safety_settings=safety_settings,
@@ -361,7 +384,28 @@ class GeminiClient:
                 **generation_config,
             )
             chat = client.chats.create(model=model_name, config=generate_content_config, history=gemini_messages[:-1])
-            response = chat.send_message(message=gemini_messages[-1].parts)
+            return chat.send_message(message=gemini_messages[-1].parts)
+
+        # Retry loop for malformed function calls
+        response = None
+        malformed_attempt = 0
+        while True:
+            response = _send_request()
+            finish_reason_value = self._extract_finish_reason_value(response)
+            if (
+                finish_reason_value == "MALFORMED_FUNCTION_CALL"
+                and malformed_attempt < malformed_retry_attempts
+            ):
+                malformed_attempt += 1
+                logger.warning(
+                    "Gemini returned MALFORMED_FUNCTION_CALL (attempt %d/%d). Retrying request.",
+                    malformed_attempt,
+                    malformed_retry_attempts,
+                )
+                if malformed_retry_delay > 0:
+                    time.sleep(malformed_retry_delay)
+                continue
+            break
 
         # Extract text and tools from response
         ans = ""
@@ -721,6 +765,31 @@ class GeminiClient:
                 return self._response_format.model_validate(json_data)
         except Exception as e:
             raise ValueError(f"Failed to parse response as valid JSON matching the schema for Structured Output: {e!s}")
+
+    def _extract_finish_reason_value(self, response) -> str | None:
+        """Extract the finish reason from a Gemini response.
+
+        Args:
+            response: The response from the Gemini API
+
+        Returns:
+            str | None: The finish reason as a string, or None if not found
+        """
+        try:
+            candidates = getattr(response, "candidates", None)
+            if not candidates:
+                return None
+            finish_reason = getattr(candidates[0], "finish_reason", None)
+        except Exception:
+            return None
+        if finish_reason is None:
+            return None
+        if hasattr(finish_reason, "name"):
+            return finish_reason.name
+        finish_str = str(finish_reason)
+        if "." in finish_str:
+            finish_str = finish_str.split(".")[-1]
+        return finish_str
 
     @staticmethod
     def _convert_type_null_to_nullable(schema: Any) -> Any:

@@ -7,10 +7,15 @@
 from types import TracebackType
 from typing import Any
 
-import diskcache
 from typing_extensions import Self
 
+from ..import_utils import optional_import_block
 from .abstract_cache_base import AbstractCache
+
+with optional_import_block() as diskcache_result:
+    import diskcache
+if not diskcache_result.is_successful:
+    diskcache = None
 
 
 class DiskCache(AbstractCache):
@@ -39,6 +44,8 @@ class DiskCache(AbstractCache):
                         a unique storage location for the cache data.
 
         """
+        if diskcache is None:
+            raise ImportError("Disk caching requires the optional 'ag2[diskcache]' extra.")
         self.cache = diskcache.Cache(seed)
 
     def get(self, key: str, default: Any | None = None) -> Any | None:

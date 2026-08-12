@@ -23,7 +23,7 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v6
         with:
-          python-version: ${{ github.event.inputs.python-version }}
+          python-version: ${{ inputs.python-version }}
 
       - name: Install quarto
         uses: quarto-dev/quarto-actions/setup@v2

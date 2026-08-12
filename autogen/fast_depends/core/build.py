@@ -9,6 +9,7 @@ import inspect
 from collections.abc import Awaitable, Callable, Sequence
 from copy import deepcopy
 from typing import Annotated, Any, TypeVar, get_args, get_origin
+from typing import cast as typing_cast
 
 from typing_extensions import ParamSpec
 
@@ -172,10 +173,13 @@ def build_call_model(
 
     response_model: type[ResponseModel[T]] | None = None
     if cast and return_annotation and return_annotation is not inspect.Parameter.empty:
-        response_model = create_model(  # type: ignore[call-overload,assignment]
-            "ResponseModel",
-            __config__=get_config_base(pydantic_config),
-            response=(return_annotation, Ellipsis),
+        response_model = typing_cast(
+            type[ResponseModel[T]],
+            create_model(  # type: ignore[call-overload]
+                "ResponseModel",
+                __config__=get_config_base(pydantic_config),
+                response=(return_annotation, Ellipsis),
+            ),
         )
 
     return CallModel(

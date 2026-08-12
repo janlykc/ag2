@@ -162,6 +162,15 @@ class TestmoduleInfo:
     def test_is_in_sys_modules(self, mock_module: ModuleType, module_info: ModuleInfo, expected: str | None) -> None:
         assert module_info.is_in_sys_modules() == expected
 
+    def test_is_in_sys_modules_compares_versions_semantically(self, mock_module: ModuleType) -> None:
+        mock_module.__version__ = "1.109.1"  # type: ignore[attr-defined]
+
+        assert ModuleInfo(name="mock_module", min_version="1.66.2", min_inclusive=True).is_in_sys_modules() is None
+
+        mock_module.__version__ = "1.2.0"  # type: ignore[attr-defined]
+
+        assert ModuleInfo(name="mock_module", max_version="1.10.0", max_inclusive=False).is_in_sys_modules() is None
+
     @pytest.mark.parametrize(
         "module_info, expected",
         [

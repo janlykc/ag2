@@ -71,12 +71,15 @@ else:
 
 ANYIO_V3 = get_version("anyio").startswith("3.")
 
+ExceptionGroup: Any
 if ANYIO_V3:
-    from anyio import ExceptionGroup as _ExceptionGroup  # type: ignore[attr-defined]
+    from anyio import ExceptionGroup as AnyIOExceptionGroup  # type: ignore[attr-defined]
+
+    ExceptionGroup = AnyIOExceptionGroup
 else:
     if sys.version_info < (3, 11):
-        from exceptiongroup import ExceptionGroup as _ExceptionGroup
-    else:
-        _ExceptionGroup = getattr(sys.modules["builtins"], "ExceptionGroup")
+        from exceptiongroup import ExceptionGroup as BackportExceptionGroup
 
-ExceptionGroup: Any = _ExceptionGroup
+        ExceptionGroup = BackportExceptionGroup
+    else:
+        ExceptionGroup = getattr(sys.modules["builtins"], "ExceptionGroup")

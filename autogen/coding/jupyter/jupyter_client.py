@@ -14,8 +14,9 @@ from types import TracebackType
 from typing import Any, cast
 
 import requests
-from requests.adapters import HTTPAdapter, Retry
+from requests.adapters import HTTPAdapter
 from typing_extensions import Self
+from urllib3.util.retry import Retry
 
 from ...doc_utils import export_module
 from ...import_utils import optional_import_block, require_optional_import

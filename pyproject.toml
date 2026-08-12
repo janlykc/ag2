@@ -57,7 +57,8 @@ dependencies = [
     "packaging",
 #    "fast-depends>=2.4.12,<3",  # integrated into the package
     "httpx>=0.28.1,<1",
-    "anyio>=3.0.0,<5.0.0"  # needed by the internal fast-depends
+    "anyio>=3.0.0,<5.0.0",  # needed by the internal fast-depends
+    "sniffio>=1.3.0,<2",  # imported directly by asyncer
 ]
 
 [project.optional-dependencies]
@@ -90,6 +91,7 @@ jupyter-executor = [
     "jupyter-kernel-gateway",
     "websocket-client",
     "requests",
+    "urllib3>=1.26,<3",
     "jupyter-client>=8.6.0",
     "ipykernel>=6.29.0",
 ]

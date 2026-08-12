@@ -65,6 +65,8 @@ class ModuleInfo:
         installed_version = raw_version_attr if isinstance(raw_version_attr, str) else None
         if installed_version is None and (self.min_version or self.max_version):
             return f"'{self.name}' is installed, but the version is not available."
+        if not self.min_version and not self.max_version:
+            return None
 
         if installed_version:
             # Convert to version object for comparison
@@ -73,17 +75,13 @@ class ModuleInfo:
             if self.min_version:
                 min_ver = version.parse(self.min_version)
                 msg = f"'{self.name}' is installed, but the installed version {installed_version} is too low (required '{self}')."
-                if not self.min_inclusive and installed_ver == min_ver:
-                    return msg
-                if self.min_inclusive and installed_ver < min_ver:
+                if installed_ver < min_ver or (not self.min_inclusive and installed_ver == min_ver):
                     return msg
 
             if self.max_version:
                 max_ver = version.parse(self.max_version)
                 msg = f"'{self.name}' is installed, but the installed version {installed_version} is too high (required '{self}')."
-                if not self.max_inclusive and installed_ver == max_ver:
-                    return msg
-                if self.max_inclusive and installed_ver > max_ver:
+                if installed_ver > max_ver or (not self.max_inclusive and installed_ver == max_ver):
                     return msg
 
         return None

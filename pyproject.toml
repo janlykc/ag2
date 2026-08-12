@@ -199,7 +199,7 @@ twilio = [
 
 mcp = [
     # mcp 1.9.4+ fixes issue #1865 where string parameters are converted to integers
-    "mcp>=1.11.0",
+    "mcp>=1.11.0,<2",
 ]
 
 mcp-proxy-gen = [
@@ -218,7 +218,14 @@ interop-crewai = [
     "weaviate-client>=4,<5; python_version>='3.10' and python_version<'3.13'",
 ]
 interop-langchain = ["langchain-community>=0.3.12,<1"]
-interop-pydantic-ai = ["pydantic-ai>=1.0.12", "fasta2a"]
+interop-pydantic-ai = [
+    "pydantic-ai>=1.0.12",
+    "fasta2a",
+    # AG2 imports mcp.server.fastmcp, removed in MCP 2.x.
+    "mcp>=1.11.0,<2",
+    # The AG2 Mistral client targets the 1.x SDK API.
+    "mistralai>=1.0.1,<2",
+]
 interop =[
     "ag2[interop-crewai, interop-langchain, interop-pydantic-ai]"
 ]
@@ -254,7 +261,7 @@ websurfer = ["beautifulsoup4", "markdownify", "pdfminer.six", "pathvalidate"]
 redis = ["redis"]
 cosmosdb = ["azure-cosmos>=4.2.0"]
 websockets = ["websockets>=14.0,<16"]
-long-context = ["llmlingua<0.3"]
+long-context = ["llmlingua<0.3", "diskcache"]
 anthropic = ["anthropic[vertex]>=0.23.1"]
 cerebras = ["cerebras_cloud_sdk>=1.0.0"]
 yepcode = [
@@ -284,7 +291,7 @@ test = [
     "nbformat==5.10.4",
     "pandas==2.3.2",
     "fastapi==0.116.1",
-    "mcp>=1.11.0",
+    "mcp>=1.11.0,<2",
     # test utilities
     "pytest==8.4.2",
     "pytest-cov==6.3.0",
@@ -315,7 +322,7 @@ docs = [
     "pyyaml==6.0.2",
     "termcolor==3.1.0",
     "nbclient==0.10.2",
-    "mcp>=1.11.0",
+    "mcp>=1.11.0,<2",
 ]
 
 types = [

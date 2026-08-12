@@ -342,9 +342,7 @@ class GeminiClient:
         gemini_messages = self._oai_messages_to_gemini_messages(messages)
 
         # Extract retry parameters
-        malformed_retry_attempts = params.get(
-            "malformed_function_call_retries", self.MALFORMED_FUNCTION_CALL_RETRIES
-        )
+        malformed_retry_attempts = params.get("malformed_function_call_retries", self.MALFORMED_FUNCTION_CALL_RETRIES)
         try:
             malformed_retry_attempts = int(malformed_retry_attempts)
         except (TypeError, ValueError):
@@ -371,9 +369,7 @@ class GeminiClient:
                     tools=tools,
                 )
                 chat = model.start_chat(history=gemini_messages[:-1], response_validation=response_validation)
-                return chat.send_message(
-                    gemini_messages[-1].parts, stream=stream, safety_settings=safety_settings
-                )
+                return chat.send_message(gemini_messages[-1].parts, stream=stream, safety_settings=safety_settings)
             client = genai.Client(api_key=self.api_key, http_options=http_options)
             generate_content_config = GenerateContentConfig(
                 safety_settings=safety_settings,
@@ -392,10 +388,7 @@ class GeminiClient:
         while True:
             response = _send_request()
             finish_reason_value = self._extract_finish_reason_value(response)
-            if (
-                finish_reason_value == "MALFORMED_FUNCTION_CALL"
-                and malformed_attempt < malformed_retry_attempts
-            ):
+            if finish_reason_value == "MALFORMED_FUNCTION_CALL" and malformed_attempt < malformed_retry_attempts:
                 malformed_attempt += 1
                 logger.warning(
                     "Gemini returned MALFORMED_FUNCTION_CALL (attempt %d/%d). Retrying request.",

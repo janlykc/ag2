@@ -8,7 +8,8 @@
 import inspect
 from collections.abc import Awaitable, Callable, Sequence
 from copy import deepcopy
-from typing import Annotated, Any, TypeVar, cast as typing_cast, get_args, get_origin
+from typing import Annotated, Any, TypeVar, get_args, get_origin
+from typing import cast as typing_cast
 
 from typing_extensions import ParamSpec
 

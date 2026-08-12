@@ -6,12 +6,32 @@
 # SPDX-License-Identifier: MIT
 # !/usr/bin/env python3 -m pytest
 
+import subprocess
+import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from autogen.cache.disk_cache import DiskCache
+
+
+def test_autogen_import_does_not_require_diskcache():
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import sys; sys.modules['diskcache'] = None; import autogen; from autogen import ConversableAgent",
+        ],
+        check=False,
+    )
+    assert completed.returncode == 0
+
+
+def test_disk_cache_requires_optional_extra(monkeypatch):
+    monkeypatch.setattr("autogen.cache.disk_cache.diskcache", None)
+    with pytest.raises(ImportError, match="ag2\\[diskcache\\]"):
+        DiskCache("test")
 
 
 class TestDiskCache:

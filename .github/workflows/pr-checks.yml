@@ -102,7 +102,9 @@ jobs:
         with:
           files: ./coverage.xml
           flags: core-without-llm, ubuntu-latest, 3.11
-          fail_ci_if_error: true
+          # Keep coverage transport strict when configured, but do not fail forks
+          # that cannot access the repository's Codecov secret.
+          fail_ci_if_error: ${{ secrets.CODECOV_TOKEN != '' }}
           token: ${{ secrets.CODECOV_TOKEN }}
 
   docs-paths-filter:
